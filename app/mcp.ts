@@ -27,7 +27,7 @@ export const mcpHandler = initializeMcpApiHandler((server) => {
     server.tool(
       "create_meme_token",
       "Create a meme token on Nad.fun",
-      createTokenSchema,
+      createTokenSchema.shape,
       async ({ name, symbol, description, image }: CreateTokenParams) => {
         const NADFUN_PRIVATE_KEY = process.env.NADFUN_PRIVATE_KEY;
         if (!NADFUN_PRIVATE_KEY) {
