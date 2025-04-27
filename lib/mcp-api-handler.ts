@@ -116,7 +116,7 @@ export function initializeMcpApiHandler(
       const heartbeatInterval = setInterval(() => {
         // Standard SSE event format for a comment/heartbeat:
         res.write("event: ping\ndata: keep-alive\n\n");
-      }, 20000);
+      }, maxDuration);
       const sessionId = transport.sessionId;
       const server = new McpServer(
         {
