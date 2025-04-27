@@ -46,7 +46,7 @@ export function initializeMcpApiHandler(
   });
   return async function mcpApiHandler(req: Request, res: ServerResponse) {
     await redisPromise;
-    const url = new URL(req.url || "", "https://example.com");
+    const url = new URL(req.url || "", "redis://default:V1xQObL6OIQFpNuO64VdPfqE3c3SQiE4@redis-11600.c14.us-east-1-2.ec2.redns.redis-cloud.com:11600");
     if (url.pathname === "/mcp") {
       if (req.method === "GET") {
         console.log("Received GET MCP request");
@@ -113,6 +113,10 @@ export function initializeMcpApiHandler(
       console.log("Got new SSE connection");
 
       const transport = new SSEServerTransport("/message", res);
+      const heartbeatInterval = setInterval(() => {
+        // Standard SSE event format for a comment/heartbeat:
+        res.write("event: ping\ndata: keep-alive\n\n");
+      }, 20000);
       const sessionId = transport.sessionId;
       const server = new McpServer(
         {
@@ -126,6 +130,7 @@ export function initializeMcpApiHandler(
       servers.push(server);
 
       server.server.onclose = () => {
+        clearInterval(heartbeatInterval);
         console.log("SSE connection closed");
         servers = servers.filter((s) => s !== server);
       };
