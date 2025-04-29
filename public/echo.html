@@ -33,17 +33,22 @@
       if (evtSource) evtSource.close();
       try {
         // 1. Call MCP echo tool
-        const res = await fetch('/app/mcp', {
+        const MCP_URL = window.location.origin + '/mcp';
+        const res = await fetch(MCP_URL, { 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'echo',
-          params: { message },
-          id: 1
-        })
+            tool: 'echo',
+            params: { message }
+          })
         });
-        const data = await res.json();
+        let data;
+        try {
+            data = await res.json();
+        } catch (e) {
+            document.getElementById('result').textContent = 'Server error: ' + (await res.text());
+            return;
+        }
         const rawText = data.content?.[0]?.text || JSON.stringify(data);
         document.getElementById('result').textContent = 'Raw echo response:';
         document.getElementById('raw').textContent = rawText;
@@ -66,4 +71,4 @@
     });
   </script>
 </body>
-</html> 
+</html>
