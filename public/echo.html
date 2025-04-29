@@ -23,38 +23,44 @@
   <div id="raw"></div>
   <div id="gemini"></div>
   <script>
-    let evtSource;
     document.getElementById('echo-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const message = document.getElementById('message').value;
       document.getElementById('result').textContent = 'Loading...';
       document.getElementById('raw').textContent = '';
       document.getElementById('gemini').textContent = '';
-      if (evtSource) evtSource.close();
       try {
-        // 1. Call MCP echo tool
+        // 1. Call MCP echo tool using JSON-RPC 2.0
         const MCP_URL = window.location.origin + '/mcp';
+        const payload = {
+          jsonrpc: '2.0',
+          method: 'echo',
+          params: { message },
+          id: 1
+        };
         const res = await fetch(MCP_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json, text/event-stream'
           },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'echo',
-            params: { message },
-            id: 1
-          })
+          body: JSON.stringify(payload)
         });
         let data;
         try {
-            data = await res.json();
+          data = await res.json();
         } catch (e) {
-            document.getElementById('result').textContent = 'Server error: Could not parse JSON response.';
-            return;
+          document.getElementById('result').textContent = 'Server error: Could not parse JSON response.';
+          return;
         }
-        const rawText = data.content?.[0]?.text || JSON.stringify(data);
+        // Handle JSON-RPC 2.0 error
+        if (data.error) {
+          document.getElementById('result').textContent = 'MCP Error: ' + (data.error.message || JSON.stringify(data.error));
+          document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+          return;
+        }
+        // Handle JSON-RPC 2.0 result
+        const rawText = data.result?.content?.[0]?.text || JSON.stringify(data.result || data);
         document.getElementById('result').textContent = 'Raw echo response:';
         document.getElementById('raw').textContent = rawText;
 
@@ -67,7 +73,7 @@
         const geminiData = await geminiRes.json();
         document.getElementById('gemini').textContent = geminiData.answer || JSON.stringify(geminiData);
       } catch (err) {
-        document.getElementById('result').textContent = 'Error: ' + err;
+        document.getElementById('result').textContent = 'Client error: ' + err;
       }
     });
   </script>
