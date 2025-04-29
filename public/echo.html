@@ -33,13 +33,15 @@
       if (evtSource) evtSource.close();
       try {
         // 1. Call MCP echo tool
-        const res = await fetch('/sse', {
+        const res = await fetch('/app/mcp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            tool: 'echo',
-            params: { message }
-          })
+          jsonrpc: '2.0',
+          method: 'echo',
+          params: { message },
+          id: 1
+        })
         });
         const data = await res.json();
         const rawText = data.content?.[0]?.text || JSON.stringify(data);
