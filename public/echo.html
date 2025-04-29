@@ -34,13 +34,16 @@
       try {
         // 1. Call MCP echo tool
         const MCP_URL = window.location.origin + '/mcp';
-        const res = await fetch(MCP_URL, { 
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const res = await fetch(MCP_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/event-stream'
+        },
+        body: JSON.stringify({
             tool: 'echo',
             params: { message }
-          })
+        })
         });
         let data;
         try {
@@ -53,22 +56,18 @@
         document.getElementById('result').textContent = 'Raw echo response:';
         document.getElementById('raw').textContent = rawText;
 
-        // 2. Call Gemini formatter via SSE
-        const prompt = 'Format this echo response as a friendly message:';
-        evtSource = new EventSource(`/api/format-with-gemini?prompt=${encodeURIComponent(prompt)}&json=${encodeURIComponent(rawText)}`);
-        let formatted = '';
-        evtSource.onmessage = function(event) {
-          formatted += event.data;
-          document.getElementById('gemini').textContent = formatted;
-        };
-        evtSource.onerror = function(err) {
-          document.getElementById('gemini').textContent += '\n[Gemini SSE error or end]';
-          evtSource.close();
-        };
+        // 2. Call Gemini formatter via POST
+        const geminiRes = await fetch('/api/format-with-gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: 'Format this echo response as a friendly message:', json: rawText })
+        });
+        const geminiData = await geminiRes.json();
+        document.getElementById('gemini').textContent = geminiData.answer || JSON.stringify(geminiData);
       } catch (err) {
         document.getElementById('result').textContent = 'Error: ' + err;
       }
     });
   </script>
 </body>
-</html>
+</html> 
