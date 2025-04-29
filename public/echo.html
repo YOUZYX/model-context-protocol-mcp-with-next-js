@@ -33,7 +33,7 @@
       if (evtSource) evtSource.close();
       try {
         // 1. Call MCP echo tool
-        const res = await fetch('/app/mcp', {
+        const res = await fetch('/sse', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
