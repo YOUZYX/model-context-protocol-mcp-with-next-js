@@ -3,27 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MCP Echo Tool UI</title>
+  <title>MCP Echo Tool UI (with Gemini)</title>
   <style>
     body { font-family: sans-serif; margin: 2em; }
     input, button { font-size: 1em; padding: 0.5em; }
-    #result { margin-top: 1em; font-weight: bold; }
+    #result, #gemini { margin-top: 1em; font-weight: bold; }
+    #gemini { color: #2a7b2a; white-space: pre-wrap; }
+    #raw { color: #888; font-size: 0.9em; }
   </style>
 </head>
 <body>
-  <h1>MCP Echo Tool UI</h1>
+  <h1>MCP Echo Tool UI (with Gemini)</h1>
   <form id="echo-form">
     <label for="message">Message:</label>
     <input type="text" id="message" name="message" required />
     <button type="submit">Send</button>
   </form>
   <div id="result"></div>
+  <div id="raw"></div>
+  <div id="gemini"></div>
   <script>
+    let evtSource;
     document.getElementById('echo-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const message = document.getElementById('message').value;
       document.getElementById('result').textContent = 'Loading...';
+      document.getElementById('raw').textContent = '';
+      document.getElementById('gemini').textContent = '';
+      if (evtSource) evtSource.close();
       try {
+        // 1. Call MCP echo tool
         const res = await fetch('/app/mcp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -33,7 +42,22 @@
           })
         });
         const data = await res.json();
-        document.getElementById('result').textContent = data.content?.[0]?.text || JSON.stringify(data);
+        const rawText = data.content?.[0]?.text || JSON.stringify(data);
+        document.getElementById('result').textContent = 'Raw echo response:';
+        document.getElementById('raw').textContent = rawText;
+
+        // 2. Call Gemini formatter via SSE
+        const prompt = 'Format this echo response as a friendly message:';
+        evtSource = new EventSource(`/api/format-with-gemini?prompt=${encodeURIComponent(prompt)}&json=${encodeURIComponent(rawText)}`);
+        let formatted = '';
+        evtSource.onmessage = function(event) {
+          formatted += event.data;
+          document.getElementById('gemini').textContent = formatted;
+        };
+        evtSource.onerror = function(err) {
+          document.getElementById('gemini').textContent += '\n[Gemini SSE error or end]';
+          evtSource.close();
+        };
       } catch (err) {
         document.getElementById('result').textContent = 'Error: ' + err;
       }
