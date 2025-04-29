@@ -51,7 +51,7 @@
         try {
             data = await res.json();
         } catch (e) {
-            document.getElementById('result').textContent = 'Server error: ' + (await res.text());
+            document.getElementById('result').textContent = 'Server error: Could not parse JSON response.';
             return;
         }
         const rawText = data.content?.[0]?.text || JSON.stringify(data);
