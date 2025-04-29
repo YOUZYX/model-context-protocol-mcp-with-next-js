@@ -35,15 +35,17 @@
         // 1. Call MCP echo tool
         const MCP_URL = window.location.origin + '/mcp';
         const res = await fetch(MCP_URL, {
-        method: 'POST',
-        headers: {
+          method: 'POST',
+          headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json, text/event-stream'
-        },
-        body: JSON.stringify({
-            tool: 'echo',
-            params: { message }
-        })
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'echo',
+            params: { message },
+            id: 1
+          })
         });
         let data;
         try {
