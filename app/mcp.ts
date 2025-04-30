@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { initializeMcpApiHandler } from "../lib/mcp-api-handler";
 import { ethers } from "ethers";
+import * as onchain from "./nadfun-onchain-tools";
 
 const NADFUN_PRIVATE_KEY = process.env.NADFUN_PRIVATE_KEY;
 
