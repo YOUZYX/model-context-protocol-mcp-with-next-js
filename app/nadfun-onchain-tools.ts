@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import * as NadFunAbi from "../../../contract-abi";
+import * as NadFunAbi from "../contract-abi";
 
 // Monad Testnet contract addresses
 export const CONTRACT_ADDRESSES = {
